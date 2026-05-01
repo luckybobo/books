@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>县中书架，寓理于乐</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- 顶部导航 -->
+    <header class="top-nav">
+      <button class="icon-btn" id="menuBtn" title="菜单">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+      </button>
+      <h1 class="app-title">县中书架，寓理于乐</h1>
+      <button class="icon-btn" id="refreshBtn" title="刷新">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- 书架视图 -->
+    <div class="bookshelf-view" id="bookshelfView">
+      <div class="section-header">
+        <h2>书目</h2>
+        <span class="book-count" id="bookCount">加载中...</span>
+      </div>
+      <div class="books-grid" id="booksGrid">
+        <div class="loading-message">正在加载书架...</div>
+      </div>
+    </div>
+
+    <!-- 阅读器视图 (默认隐藏) -->
+    <div class="reader-view hidden" id="readerView">
+      <!-- 返回按钮 -->
+      <button class="back-to-shelf" id="backToShelfBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        返回书架
+      </button>
+
+      <!-- 作者信息卡片 -->
+      <div class="author-card" id="authorCard">
+        <div class="author-photo-wrapper">
+          <div class="author-photo-placeholder" id="authorPhotoPlaceholder">👤</div>
+          <img id="authorPhoto" src="images\authors\cc.png" alt="作者照片" class="author-photo hidden">
+        </div>
+        <div class="author-details">
+          <h3 class="author-name" id="authorName">作者名</h3>
+          <p class="author-bio" id="authorBio">点击查看作者详细介绍</p>
+          <div class="author-stats">
+            <span class="stat-item">
+              <span class="stat-value" id="authorWorks">0</span>
+              <span class="stat-label">作品</span>
+            </span>
+            <span class="stat-item">
+              <span class="stat-value" id="authorReaders">0</span>
+              <span class="stat-label">读者</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 书籍信息栏 -->
+      <div class="book-info-bar">
+        <h2 class="current-book-title" id="currentBookTitle">书名</h2>
+        <button class="chapter-selector-btn" id="chapterSelectorBtn">
+          <span id="currentChapterTitle">选择章节</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 阅读内容区域 -->
+      <div class="reading-area" id="readingArea">
+        <div class="chapter-content" id="chapterContent">
+          <div class="loading-spinner">请选择章节开始阅读</div>
+        </div>
+      </div>
+
+      <!-- 底部控制栏 -->
+      <div class="bottom-controls">
+        <button class="control-btn" id="prevChapterBtn" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          上一章
+        </button>
+
+        <div class="progress-indicator">
+          <span id="chapterProgress">0/0</span>
+        </div>
+
+        <button class="control-btn" id="nextChapterBtn" disabled>
+          下一章
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 章节选择侧边栏 -->
+    <div class="chapter-sidebar hidden" id="chapterSidebar">
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <div class="sidebar-content">
+        <div class="sidebar-header">
+          <h3>目录</h3>
+          <button class="close-sidebar" id="closeSidebarBtn">✕</button>
+        </div>
+        <div class="chapter-list" id="chapterList">
+          <div class="loading-message">加载中...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 作者详情弹窗 -->
+    <div class="author-modal hidden" id="authorModal">
+      <div class="modal-overlay" id="modalOverlay"></div>
+      <div class="modal-content">
+        <button class="modal-close" id="closeAuthorModal">✕</button>
+        <div class="modal-author-photo">
+          <div class="author-photo-placeholder large">👤</div>
+          <img id="modalAuthorPhoto" src="images\authors\cc.png" alt="作者照片" class="author-photo hidden">
+        </div>
+        <h2 class="modal-author-name" id="modalAuthorName"></h2>
+        <p class="modal-author-birth" id="modalAuthorBirth"></p>
+        <div class="modal-author-bio" id="modalAuthorBio"></div>
+        <div class="modal-author-stats">
+          <span>📚 <span id="modalAuthorWorks">0</span> 部作品</span>
+          <span>👥 <span id="modalAuthorReaders">0</span> 读者</span>
+        </div>
+        <div class="modal-author-books">
+          <h4>代表作品</h4>
+          <div class="works-list" id="worksList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
