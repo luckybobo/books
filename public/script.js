@@ -1,5 +1,7 @@
-// API基础URL
-const API_BASE = 'http://localhost:3000/api';
+// API基础URL - 自动适配开发和生产环境
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : '/api';
 
 // 全局状态
 let currentBook = null;
@@ -44,21 +46,36 @@ const dom = {
 // 初始化：加载书架
 async function loadBookshelf() {
   try {
-    dom.booksGrid.innerHTML = '<div class="loading-message">正在加载书架...</div>';
+    dom.booksGrid.innerHTML = '<div class="loading-message">📚 正在加载书架...</div>';
+    
+    console.log('正在请求书架数据...', API_BASE + '/books');
     const response = await fetch(`${API_BASE}/books`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP错误: ${response.status}`);
+    }
+    
     const result = await response.json();
+    console.log('书架数据:', result);
 
     if (result.success && result.data.length > 0) {
       renderBookshelf(result.data);
       dom.bookCount.textContent = `${result.data.length} 本书`;
     } else {
-      dom.booksGrid.innerHTML = '<div class="error-message">书架上还没有书，请添加书籍到数据库</div>';
+      dom.booksGrid.innerHTML = '<div class="error-message">📭 书架上还没有书，请添加书籍到数据库</div>';
       dom.bookCount.textContent = '0 本书';
     }
   } catch (error) {
     console.error('加载书架失败:', error);
-    dom.booksGrid.innerHTML = '<div class="error-message">❌ 无法连接到服务器，请确保服务器已启动</div>';
-    dom.bookCount.textContent = '加载失败';
+    dom.booksGrid.innerHTML = `<div class="error-message">
+      ❌ 无法连接到服务器<br>
+      <small>错误: ${error.message}</small><br>
+      <small>API地址: ${API_BASE}/books</small><br>
+      <button onclick="loadBookshelf()" style="margin-top:10px;padding:8px 16px;border-radius:20px;border:1px solid #ccc;background:#fff;cursor:pointer;">
+        🔄 重试
+      </button>
+    </div>`;
+    dom.bookCount.textContent = '连接失败';
   }
 }
 
@@ -67,7 +84,7 @@ function renderBookshelf(books) {
   dom.booksGrid.innerHTML = books.map(book => `
     <div class="book-card" onclick="openBook('${book.id}')">
       <div class="book-cover">
-        ${book.cover ? `<img src="${book.cover}" alt="${book.title}" onerror="this.parentElement.innerHTML='${book.title[0]}'">` : book.title[0]}
+        ${book.cover ? `<img src="${book.cover}" alt="${escapeHtml(book.title)}" onerror="this.parentElement.innerHTML='${escapeHtml(book.title[0])}'">` : escapeHtml(book.title[0])}
       </div>
       <div class="book-info">
         <div class="book-title">${escapeHtml(book.title)}</div>
@@ -81,8 +98,15 @@ function renderBookshelf(books) {
 // 打开书籍
 async function openBook(bookId) {
   try {
+    console.log('正在打开书籍:', bookId);
     const response = await fetch(`${API_BASE}/books/${bookId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP错误: ${response.status}`);
+    }
+    
     const result = await response.json();
+    console.log('书籍数据:', result);
 
     if (result.success) {
       currentBook = result.data;
@@ -104,7 +128,7 @@ async function openBook(bookId) {
     }
   } catch (error) {
     console.error('打开书籍失败:', error);
-    alert('无法打开书籍，请检查网络连接');
+    alert('无法打开书籍: ' + error.message);
   }
 }
 
@@ -160,9 +184,16 @@ async function loadChapter(chapterId) {
 
   try {
     dom.chapterContent.innerHTML = '<div class="loading-spinner">📖 正在加载章节...</div>';
-
+    
+    console.log('正在加载章节:', chapterId);
     const response = await fetch(`${API_BASE}/books/${currentBook.id}/chapters/${chapterId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP错误: ${response.status}`);
+    }
+    
     const result = await response.json();
+    console.log('章节数据:', result);
 
     if (result.success) {
       const data = result.data;
@@ -193,7 +224,13 @@ async function loadChapter(chapterId) {
     }
   } catch (error) {
     console.error('加载章节失败:', error);
-    dom.chapterContent.innerHTML = '<div class="error-message">❌ 加载失败，请检查网络连接</div>';
+    dom.chapterContent.innerHTML = `<div class="error-message">
+      ❌ 加载失败<br>
+      <small>${error.message}</small><br>
+      <button onclick="loadChapter('${chapterId}')" style="margin-top:10px;padding:8px 16px;border-radius:20px;border:1px solid #ccc;background:#fff;cursor:pointer;">
+        🔄 重试
+      </button>
+    </div>`;
   }
 }
 
@@ -241,7 +278,8 @@ function showAuthorModal() {
   if (author.photo) {
     dom.modalAuthorPhoto.src = author.photo;
     dom.modalAuthorPhoto.classList.remove('hidden');
-    dom.modalAuthorPhoto.parentElement.querySelector('.author-photo-placeholder').classList.add('hidden');
+    const placeholder = dom.modalAuthorPhoto.parentElement.querySelector('.author-photo-placeholder');
+    if (placeholder) placeholder.classList.add('hidden');
   }
 
   // 作品列表
@@ -258,6 +296,7 @@ function showAuthorModal() {
 
 // HTML转义
 function escapeHtml(text) {
+  if (!text) return '';
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
@@ -265,10 +304,11 @@ function escapeHtml(text) {
 
 // 格式化数字
 function formatNumber(num) {
+  if (!num) return '0';
   if (num >= 10000) {
     return (num / 10000).toFixed(1) + '万';
   }
-  return num ? num.toString() : '0';
+  return num.toString();
 }
 
 // ============ 事件监听 ============
@@ -340,4 +380,6 @@ document.addEventListener('keydown', (e) => {
 });
 
 // 启动应用
+console.log('🌐 API地址:', API_BASE);
+console.log('📍 当前域名:', window.location.hostname);
 loadBookshelf();

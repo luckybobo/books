@@ -212,7 +212,40 @@ app.get('/api/authors/:authorId', async (req, res) => {
     });
   }
 });
-
+// 在 server.js 的 API 路由部分添加
+// 调试端点 - 检查服务器和文件系统状态
+app.get('/api/debug', async (req, res) => {
+  try {
+    const fsSync = require('fs');
+    const dbExists = fsSync.existsSync(DB_PATH);
+    const chaptersExists = fsSync.existsSync(CHAPTERS_BASE_PATH);
+    
+    let chapterFiles = [];
+    if (chaptersExists) {
+      const books = await fs.readdir(CHAPTERS_BASE_PATH);
+      for (const book of books) {
+        const bookPath = path.join(CHAPTERS_BASE_PATH, book);
+        const stat = await fs.stat(bookPath);
+        if (stat.isDirectory()) {
+          const files = await fs.readdir(bookPath);
+          chapterFiles.push({ book, files });
+        }
+      }
+    }
+    
+    res.json({
+      success: true,
+      serverTime: new Date().toISOString(),
+      nodeVersion: process.version,
+      databaseExists: dbExists,
+      chaptersPathExists: chaptersExists,
+      chapterFiles: chapterFiles,
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 // 健康检查端点
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
