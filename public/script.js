@@ -44,7 +44,7 @@ const dom = {
 // 初始化：加载书架
 async function loadBookshelf() {
   try {
-    dom.booksGrid.innerHTML = '<div class="loading-message">📚 正在加载书架...</div>';
+    dom.booksGrid.innerHTML = '<div class="loading-message">正在加载书架...</div>';
     const response = await fetch(`${API_BASE}/books`);
     const result = await response.json();
 
@@ -52,7 +52,7 @@ async function loadBookshelf() {
       renderBookshelf(result.data);
       dom.bookCount.textContent = `${result.data.length} 本书`;
     } else {
-      dom.booksGrid.innerHTML = '<div class="error-message">📭 书架上还没有书，请添加书籍到数据库</div>';
+      dom.booksGrid.innerHTML = '<div class="error-message">书架上还没有书，请添加书籍到数据库</div>';
       dom.bookCount.textContent = '0 本书';
     }
   } catch (error) {
@@ -340,5 +340,4 @@ document.addEventListener('keydown', (e) => {
 });
 
 // 启动应用
-console.log('📚 墨简阅读前端已加载');
 loadBookshelf();

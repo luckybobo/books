@@ -4,7 +4,9 @@ const path = require('path');
 const fs = require('fs').promises;
 
 const app = express();
-const PORT = 3000;
+
+// 使用Render提供的端口，默认3000
+const PORT = process.env.PORT || 3000;
 
 // 中间件
 app.use(cors());
@@ -211,6 +213,11 @@ app.get('/api/authors/:authorId', async (req, res) => {
   }
 });
 
+// 健康检查端点
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // 404处理
 app.use((req, res) => {
   res.status(404).json({ success: false, message: '接口不存在' });
@@ -225,12 +232,7 @@ app.use((err, req, res, next) => {
 // 启动服务器
 app.listen(PORT, () => {
   console.log('='.repeat(50));
-  console.log('📚 墨简阅读服务器已启动');
-  console.log(`🌐 访问地址: http://localhost:${PORT}`);
+  console.log(`🌐 端口: ${PORT}`);
   console.log(`📁 章节文件路径: ${CHAPTERS_BASE_PATH}`);
-  console.log(`📋 数据库路径: ${DB_PATH}`);
-  console.log('='.repeat(50));
-  console.log('  - 将 .txt 文件放入 database/chapters/[book_id]/ 目录');
-  console.log('  - 按 Ctrl+C 停止服务器');
   console.log('='.repeat(50));
 });
